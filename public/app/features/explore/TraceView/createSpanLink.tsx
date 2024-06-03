@@ -195,6 +195,10 @@ function legacyCreateSpanLinkFactory(
         case 'googlecloud-logging-datasource':
           tags = getFormattedTags(span, tagsToUse, { joinBy: ' AND ' });
           query = getQueryForGoogleCloudLogging(span, traceToLogsOptions, tags, customQuery);
+        case 'victorialogs-datasource':
+          tags = getFormattedTags(span, tagsToUse, { labelValueSign: ':', joinBy: ' ' });
+          query = getQueryForVictoriaLogs(span, traceToLogsOptions, tags, customQuery);
+          break;
       }
 
       // query can be false in case the simple UI tag mapping is used but none of them are present in the span.
@@ -509,6 +513,40 @@ function getQueryForFalconLogScale(span: TraceSpan, options: TraceToLogsOptionsV
 
   return {
     lsql,
+    refId: '',
+  };
+}
+
+function getQueryForVictoriaLogs(
+  span: TraceSpan,
+  options: TraceToLogsOptionsV2,
+  tags: string,
+  customQuery?: string
+) {
+  const { filterByTraceID, filterBySpanID } = options;
+
+  if (customQuery) {
+    return {
+      expr: customQuery,
+      refId: '',
+    };
+  }
+
+  let queryArr = [];
+  if (filterBySpanID && span.spanID) {
+    queryArr.push('span_id:"${__span.spanId}"');
+  }
+
+  if (filterByTraceID && span.traceID) {
+    queryArr.push('trace_id:"${__span.traceId}"');
+  }
+
+  if (tags) {
+    queryArr.push('${__tags}');
+  }
+
+  return {
+    expr: queryArr.join(' '),
     refId: '',
   };
 }

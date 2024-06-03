@@ -79,6 +79,7 @@ export function TraceToLogsSettings({ options, onOptionsChange }: Props) {
     'grafana-opensearch-datasource', // external
     'grafana-falconlogscale-datasource', // external
     'googlecloud-logging-datasource', // external
+    'victorialogs-datasource', // external
   ];
 
   const traceToLogs = useMemo(
